@@ -1,6 +1,7 @@
 # Testserver einrichten (Windows)
 
 Der Testserver läuft auf einem Windows-PC zu Hause und bleibt online, solange der PC an ist.
+Von unterwegs (z. B. aus der Schule) verbinden wir uns über **Hamachi** (Abschnitt 5, Variante H).
 Alles Nötige liegt im Ordner [`testserver/`](../testserver):
 
 | Datei | Zweck |
@@ -71,6 +72,23 @@ dann geht Variante A nicht, nehmt Variante B.
 
 **Wechselnde IP:** Viele Anschlüsse bekommen regelmäßig eine neue IP. Abhilfe: kostenloser DynDNS-Dienst
 (z. B. DuckDNS oder der DynDNS-Dienst eures Routers).
+
+### Variante H: Hamachi (unsere Wahl – ohne Router-Einstellungen)
+[Hamachi](https://vpn.net) baut ein virtuelles LAN über das Internet. Alle Rechner im selben
+Hamachi-Netz erreichen sich, als stünden sie im selben Raum. Die kostenlose Version erlaubt
+bis zu 5 Rechner pro Netz.
+
+1. **Server-PC:** Hamachi starten → *Netzwerk → Neues Netzwerk erstellen* → Netzwerk-ID und Passwort festlegen.
+2. **Laptop:** Hamachi installieren → *Netzwerk → Bestehendem Netzwerk beitreten* → ID und Passwort eingeben.
+3. **Firewall auf dem Server-PC** (PowerShell als Administrator). Windows stuft den Hamachi-Adapter als
+   „Öffentlich“ ein, deshalb erlauben wir den Port gezielt **nur** auf diesem Adapter:
+   ```powershell
+   New-NetFirewallRule -DisplayName "Minecraft Testserver (Hamachi)" -Direction Inbound -Protocol TCP -LocalPort 25565 -Action Allow -InterfaceAlias Hamachi
+   ```
+4. **Verbinden:** In Minecraft die Hamachi-IPv4 des Server-PCs eingeben (steht oben im Hamachi-Fenster, beginnt mit `25.`).
+
+Vorteile: keine Portfreigabe, keine wechselnde öffentliche IP, der Server ist nicht für das ganze Internet
+offen. Nachteil: Manche Schulnetze blockieren Hamachi – dann den Laptop mit dem Handy-Hotspot verbinden.
 
 ### Variante B: Tunnel ohne Router-Einstellungen
 Dienste wie **playit.gg** (kostenlose Stufe) leiten Verbindungen über ihre Server zu euch weiter.
