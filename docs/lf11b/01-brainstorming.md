@@ -6,44 +6,7 @@
 
 ## Mindmap
 
-GitHub zeigt den folgenden Block automatisch als Grafik an.
-
-```mermaid
-mindmap
-  root((Netzwerk-<br/>sicherheit))
-    Schutzziele
-      Vertraulichkeit
-      Integrität
-      Verfügbarkeit
-      Authentizität
-    Bedrohungen
-      Malware
-      Phishing
-      DDoS
-      Manipulierte Clients / Cheats
-      Unbefugter Zugriff
-      Innentäter
-    Technische Maßnahmen
-      Firewall / Portfreigaben
-      Verschlüsselung
-      Authentifizierung
-      Updates & Patches
-      Backups
-      Monitoring & Logging
-      Serverseitige Prüfung
-    Organisatorische Maßnahmen
-      Sicherheitsleitlinie
-      Rollen & Rechte
-      Schulung
-      Notfallplan
-    Recht
-      DSGVO
-      IT-Sicherheitsgesetz
-      Nutzungsbedingungen
-    Standards
-      BSI IT-Grundschutz
-      ISO 27001
-```
+![Mindmap Netzwerksicherheit](img/mindmap-netzwerksicherheit.webp)
 
 ## Einordnung: Warum unser Szenario?
 
