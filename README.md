@@ -9,7 +9,7 @@ Ein serverseitiges Anticheat-Plugin für Paper-Server – entstanden als Schulpr
 Es erkennt typische Cheats (Fly, Speed, Reach, KillAura/Autoclicker, NoFall), zählt
 Violation-Level pro Spieler und Check, warnt Admins und kickt ab einem Grenzwert.
 
-> **Status:** Projektgerüst (Phase 1). Die Checks folgen in Phase 3.
+> **Status:** Alle Checks sind umgesetzt (Phase 3). Tests mit dem Cheat-Client laufen.
 
 ## Schulprojekt: Lernfeld 11 FISI – Szenario X
 
@@ -30,14 +30,16 @@ vernetztes System ab: einen Minecraft-Server, dessen Clients nicht vertrauenswü
 Übersicht: [docs/lf11b/README.md](docs/lf11b/README.md)
 
 ## Features
-- [ ] Fly-Check
-- [ ] Speed-Check
-- [ ] Reach-Check
-- [ ] KillAura-/Autoclicker-Check
-- [ ] NoFall-Check
-- [ ] Violation-Level, Admin-Warnungen, Logdatei, Auto-Kick
-- [ ] Grenzwerte in `config.yml`
-- [ ] Befehl `/ac status <Spieler>`
+- [x] Fly-Check (Schwerkraft-Vorhersage + Schweben)
+- [x] Speed-Check (Bewegungs-Attribut inkl. Sprint/Effekte, Eis, Knockback)
+- [x] Reach-Check (Augen → Hitbox, Ping-Ausgleich)
+- [x] KillAura-Check (Blickfeld, Kopf-Snap, mehrere Ziele) und AutoClicker-Check (CPS, Gleichmäßigkeit)
+- [x] NoFall-Check (eigene Fallhöhenmessung)
+- [x] Violation-Level, Admin-Warnungen, Logdatei (ohne IPs), Auto-Kick
+- [x] Grenzwerte in `config.yml`, `/ac reload`
+- [x] Befehl `/ac status <Spieler>`
+
+Details: [docs/checks.md](docs/checks.md)
 
 ## Voraussetzungen
 - Java 25 (JDK)
@@ -55,7 +57,15 @@ vernetztes System ab: einen Minecraft-Server, dessen Clients nicht vertrauenswü
 Die fertige Datei liegt danach in `build/libs/`.
 
 ## Nutzung
-`/ac status <Spieler>` zeigt die aktuellen Violations (ab Phase 3).
+| Befehl | Wirkung |
+|---|---|
+| `/ac status <Spieler>` | aktuelle Violation-Level pro Check |
+| `/ac alerts` | eigene Anticheat-Meldungen an/aus |
+| `/ac reload` | `config.yml` neu laden |
+
+Admins (OPs) sehen Meldungen wie
+`[AC] Spieler verdächtig: Speed (VL 3,0/20) 0,85 > 0,62 Blöcke/Tick`.
+Alle Meldungen landen auch in `plugins/SchoolAntiCheat/violations.log`.
 
 ## Projektstruktur
 ```

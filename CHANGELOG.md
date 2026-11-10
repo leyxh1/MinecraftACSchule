@@ -8,6 +8,15 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 ## [Unreleased]
 
 ### Added
+- Checks: Fly, Speed, NoFall, Reach, KillAura, AutoClicker.
+- ViolationManager: VL pro Spieler und Check, Admin-Meldungen, `violations.log` ohne IPs, Auto-Kick, VL-Abbau.
+- Befehl `/ac status|alerts|reload`, alle Grenzwerte in `config.yml`.
+- Doku: `docs/checks.md` (inkl. Grenzwerte einstellen), `docs/architecture.md`.
+
+### Changed
+- `start.bat` kopiert das Plugin bei jedem Neustart, damit ein neuer Build sofort aktiv ist.
+
+### Added (Phase 1/2)
 - Projektgerüst: Gradle-Build, Paper-Plugin-Grundklasse, GitHub-Actions-Build.
 - Dokumentation (README, CONTRIBUTING, docs/).
 - Testserver: `start.bat` mit automatischem Paper-Download (Prüfsumme), Plugin-Kopie, EULA-Abfrage und Neustart nach Absturz; gehärtete `server.properties`-Vorlage; Anleitung `docs/testserver.md`.
