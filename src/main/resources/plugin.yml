@@ -5,3 +5,17 @@ main: dev.schule.anticheat.AntiCheatPlugin
 api-version: '26.3'
 description: Schulprojekt - serverseitiges Anticheat
 authors: [Marcel, Niklas]
+
+commands:
+  ac:
+    description: Anticheat-Befehle (status, alerts, reload)
+    usage: /ac <status|alerts|reload>
+    permission: schoolanticheat.command
+
+permissions:
+  schoolanticheat.command:
+    description: Darf /ac benutzen
+    default: op
+  schoolanticheat.alerts:
+    description: Bekommt Anticheat-Meldungen im Chat
+    default: op
