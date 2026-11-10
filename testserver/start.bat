@@ -6,7 +6,7 @@ REM  Was das Skript macht:
 REM   1. Java 25 suchen
 REM   2. Paper herunterladen (nur beim ersten Mal)
 REM   3. Gehaertete server.properties anlegen (nur beim ersten Mal)
-REM   4. Unser Plugin aus build\libs in den plugins-Ordner kopieren
+REM   4. Unser Plugin aus build\libs in den plugins-Ordner kopieren (bei jedem Neustart)
 REM   5. EULA abfragen (nur beim ersten Mal)
 REM   6. Server starten und nach einem Absturz automatisch neu starten
 REM
@@ -51,17 +51,6 @@ if not exist "%RUN%\server.properties" (
     echo [OK] server.properties aus Vorlage erstellt.
 )
 
-REM ---------- 4) Unser Plugin kopieren ----------
-if not exist "%RUN%\plugins" mkdir "%RUN%\plugins"
-set "PLUGIN="
-for %%F in ("%HIER%..\build\libs\SchoolAntiCheat-*.jar") do set "PLUGIN=%%F"
-if defined PLUGIN (
-    copy /y "!PLUGIN!" "%RUN%\plugins\SchoolAntiCheat.jar" >nul
-    echo [OK] Plugin kopiert: !PLUGIN!
-) else (
-    echo [WARNUNG] Kein Plugin gefunden. Erst im Projektordner bauen:  gradlew.bat build
-)
-
 REM ---------- 5) EULA ----------
 findstr /c:"eula=true" "%RUN%\eula.txt" >nul 2>&1
 if errorlevel 1 (
@@ -80,6 +69,17 @@ if errorlevel 1 (
 REM ---------- 6) Server starten (mit automatischem Neustart) ----------
 cd /d "%RUN%"
 :schleife
+REM ---------- 4) Unser Plugin kopieren (bei JEDEM Start, damit ein neuer Build aktiv wird) ----------
+if not exist "%RUN%\plugins" mkdir "%RUN%\plugins"
+set "PLUGIN="
+for %%F in ("%HIER%..\build\libs\SchoolAntiCheat-*.jar") do set "PLUGIN=%%F"
+if defined PLUGIN (
+    copy /y "!PLUGIN!" "%RUN%\plugins\SchoolAntiCheat.jar" >nul
+    echo [OK] Plugin kopiert: !PLUGIN!
+) else (
+    echo [WARNUNG] Kein Plugin gefunden. Erst im Projektordner bauen:  gradlew.bat build
+)
+
 echo.
 echo [..] Server startet. Zum Beenden in der Konsole "stop" eingeben.
 "%JAVA%" -Xms%RAM% -Xmx%RAM% -jar paper.jar --nogui
@@ -87,6 +87,17 @@ echo.
 choice /c JN /t 15 /d J /m "Server wurde beendet. Neu starten (automatisch J nach 15 s)"
 if errorlevel 2 goto :ende
 goto :schleife
+REM ---------- 4) Unser Plugin kopieren (bei JEDEM Start, damit ein neuer Build aktiv wird) ----------
+if not exist "%RUN%\plugins" mkdir "%RUN%\plugins"
+set "PLUGIN="
+for %%F in ("%HIER%..\build\libs\SchoolAntiCheat-*.jar") do set "PLUGIN=%%F"
+if defined PLUGIN (
+    copy /y "!PLUGIN!" "%RUN%\plugins\SchoolAntiCheat.jar" >nul
+    echo [OK] Plugin kopiert: !PLUGIN!
+) else (
+    echo [WARNUNG] Kein Plugin gefunden. Erst im Projektordner bauen:  gradlew.bat build
+)
+
 
 :ende
 endlocal
