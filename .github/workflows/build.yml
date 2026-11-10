@@ -1,0 +1,32 @@
+name: Build
+
+# Läuft bei jedem Push und bei jedem Pull Request
+on:
+  push:
+    branches: [main, develop, "feature/**", "fix/**"]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code holen
+        uses: actions/checkout@v4
+
+      - name: Java 25 einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Gradle einrichten (mit Cache)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Plugin bauen
+        run: ./gradlew build
+
+      - name: .jar als Artefakt hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: SchoolAntiCheat
+          path: build/libs/*.jar

@@ -1,0 +1,10 @@
+# Zeilenenden automatisch anpassen
+* text=auto
+
+# Shell-Skripte brauchen Unix-Zeilenenden (LF), Windows-Skripte CRLF
+gradlew text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf
+
+# Binärdateien nicht anfassen
+*.jar binary

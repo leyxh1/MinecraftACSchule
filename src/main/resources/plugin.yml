@@ -1,0 +1,7 @@
+name: SchoolAntiCheat
+version: '${version}'
+main: dev.schule.anticheat.AntiCheatPlugin
+# Minecraft-/Paper-Version, für die das Plugin geschrieben ist
+api-version: '26.3'
+description: Schulprojekt - serverseitiges Anticheat
+authors: [Marcel, Niklas]

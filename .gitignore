@@ -1,0 +1,48 @@
+# Gradle / Build
+.gradle/
+build/
+out/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Test-Server (gehört NICHT ins Repo)
+server/
+run/
+world/
+world_nether/
+world_the_end/
+logs/
+cache/
+libraries/
+versions/
+plugins/*.jar
+paper*.jar
+eula.txt
+server.properties
+bukkit.yml
+spigot.yml
+whitelist.json
+ops.json
+banned-*.json
+usercache.json
+
+# Cheat-Clients (nie einchecken!)
+*.mrpack
+meteor-client*.jar
+wurst*.jar
+cheats/
+
+# Betriebssystem
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Claude Code lokale Einstellungen
+.claude/
