@@ -29,5 +29,7 @@ tasks {
     }
     compileJava {
         options.encoding = "UTF-8"
+        // Warnungen bei veralteten (deprecated) Funktionen anzeigen
+        options.compilerArgs.add("-Xlint:deprecation")
     }
 }

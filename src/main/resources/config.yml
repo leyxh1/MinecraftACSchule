@@ -1,0 +1,88 @@
+# ==============================================================
+#  SchoolAntiCheat - Konfiguration
+# ==============================================================
+# VL = Violation-Level: "Strafpunkte" pro Spieler und Check.
+#  - Jeder erkannte Verstoß erhöht das VL.
+#  - Pro Sekunde sinkt das VL um "decay-per-second" (Fehlalarme verschwinden so wieder).
+#  - Erreicht das VL "kick-vl", wird der Spieler gekickt.
+# Nach Änderungen: /ac reload (kein Neustart nötig).
+# Wie man die Werte sinnvoll einstellt: docs/checks.md
+
+# Meldungen an Admins (Berechtigung schoolanticheat.alerts, Standard: OPs)
+alerts:
+  enabled: true
+
+# Automatischer Kick, wenn ein VL den Grenzwert "kick-vl" erreicht
+kick:
+  enabled: true
+  message: "Du wurdest vom Anticheat gekickt (Verdacht: {check})."
+
+# Logdatei plugins/SchoolAntiCheat/violations.log (ohne IP-Adressen, DSGVO)
+log:
+  enabled: true
+
+checks:
+  # Fliegen / Schweben: vergleicht die Höhenänderung mit der Schwerkraft
+  fly:
+    enabled: true
+    kick-vl: 15
+    decay-per-second: 0.5
+    flag-cooldown-ticks: 10     # höchstens 2 Meldungen pro Sekunde
+    tolerance: 0.03             # erlaubte Abweichung von der Schwerkraft (Blöcke pro Tick)
+    buffer: 4                   # so viele Abweichungen, bevor gemeldet wird
+    hover-seconds: 2            # so lange bewegungslos in der Luft = Schweben
+
+  # Zu schnelle horizontale Bewegung
+  speed:
+    enabled: true
+    kick-vl: 20
+    decay-per-second: 1.0
+    flag-cooldown-ticks: 10
+    tolerance: 1.10             # 10 % Spielraum auf die berechnete Höchstgeschwindigkeit
+    air-bonus: 0.33             # Extra-Tempo direkt nach einem Sprung (Blöcke pro Tick)
+    ice-multiplier: 2.5         # Auf Eis ist man viel schneller
+    head-bonus: 0.30            # Springen unter einer Decke macht schneller
+    velocity-ticks: 30          # so lange nach Knockback wird mehr erlaubt
+    buffer: 3
+
+  # Kein Fallschaden trotz großer Fallhöhe
+  nofall:
+    enabled: true
+    kick-vl: 6
+    decay-per-second: 0.1
+    flag-cooldown-ticks: 0
+    extra-distance: 1.0         # so viele Blöcke über der sicheren Fallhöhe (3) muss man fallen
+    check-delay-ticks: 5        # so lange nach der Landung auf den Schaden warten
+
+  # Angriff aus zu großer Entfernung
+  reach:
+    enabled: true
+    kick-vl: 10
+    decay-per-second: 0.5
+    flag-cooldown-ticks: 5
+    tolerance: 0.30             # Spielraum auf die normale Reichweite (3 Blöcke)
+    ping-factor: 0.10           # zusätzlicher Spielraum pro 50 ms Ping
+    max-ping: 300               # Ping-Ausgleich höchstens bis zu diesem Ping (ms)
+    buffer: 2
+
+  # KillAura: Treffer außerhalb des Blickfelds, ruckartige Drehungen, viele Ziele
+  killaura:
+    enabled: true
+    kick-vl: 15
+    decay-per-second: 0.5
+    flag-cooldown-ticks: 10
+    max-angle: 75               # Ziel darf höchstens so viel Grad neben dem Fadenkreuz sein
+    snap-angle: 45              # Kopfdrehung in einem Tick direkt vor dem Schlag (Grad)
+    max-targets: 3              # so viele verschiedene Ziele ...
+    target-window-ticks: 10     # ... innerhalb dieser Zeit (10 Ticks = 0,5 s)
+    buffer: 3
+
+  # Autoclicker: zu viele oder zu gleichmäßige Klicks
+  autoclicker:
+    enabled: true
+    kick-vl: 15
+    decay-per-second: 0.5
+    flag-cooldown-ticks: 20
+    max-cps: 20                 # mehr Klicks pro Sekunde schafft kaum ein Mensch
+    min-cps-for-consistency: 8  # Gleichmäßigkeit erst ab dieser Klickrate prüfen
+    min-deviation-ms: 10        # Menschen klicken nie exakt gleichmäßig
