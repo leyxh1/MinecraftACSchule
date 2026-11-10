@@ -66,7 +66,12 @@ docs/lf11b/      Lernfeld-Doku: Schutzbedarf, Risikoanalyse, Maßnahmen, Bewertu
 .github/         Workflows, Issue- und PR-Vorlagen
 ```
 
+## Testserver
+Startskript und gehärtete Konfiguration liegen in [`testserver/`](testserver). Doppelklick auf
+`testserver\start.bat` genügt – Details in der [Testserver-Anleitung](docs/testserver.md).
+
 ## Dokumentation
+- [Testserver-Anleitung](docs/testserver.md)
 - [Lernfeld 11 – Sicherheitsanalyse und Bewertung](docs/lf11b/README.md)
 - [Architektur](docs/architecture.md)
 - [Beschreibung der Checks](docs/checks.md)

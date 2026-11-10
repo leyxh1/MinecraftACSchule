@@ -12,7 +12,8 @@ out/
 .project
 .settings/
 
-# Test-Server (gehört NICHT ins Repo)
+# Test-Server (gehört NICHT ins Repo) – nur Skripte/Vorlage in testserver/ sind versioniert
+testserver/run/
 server/
 run/
 world/

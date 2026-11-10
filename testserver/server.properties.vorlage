@@ -1,0 +1,33 @@
+# Gehaertete Vorlage fuer den SchoolAntiCheat-Testserver.
+# start.bat kopiert sie beim ersten Start nach run\server.properties.
+# Begruendungen: docs/testserver.md und docs/lf11b/04-massnahmen.md
+
+motd=SchoolAntiCheat Testserver (LF11)
+server-port=25565
+
+# S8: Nur echte Mojang-/Microsoft-Accounts duerfen joinen (Authentizitaet)
+online-mode=true
+enforce-secure-profile=true
+
+# Nur Spieler auf der Whitelist duerfen joinen (Server laeuft dauerhaft im Internet)
+white-list=true
+enforce-whitelist=true
+
+# S9: Keine Fernwartung und keine Statusabfrage von aussen
+enable-rcon=false
+enable-query=false
+
+# S6: Keine IP-Adressen ins Server-Log schreiben (DSGVO, Datensparsamkeit)
+log-ips=false
+
+# Vanilla-Flugschutz AUS: Sonst kickt Minecraft Fly-Cheater selbst,
+# bevor unser Anticheat zeigen kann, dass es den Cheat erkennt.
+allow-flight=true
+
+max-players=10
+gamemode=survival
+difficulty=normal
+pvp=true
+spawn-protection=0
+view-distance=10
+simulation-distance=8
