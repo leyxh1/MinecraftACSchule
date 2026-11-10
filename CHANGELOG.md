@@ -10,6 +10,7 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 ### Added
 - Projektgerüst: Gradle-Build, Paper-Plugin-Grundklasse, GitHub-Actions-Build.
 - Dokumentation (README, CONTRIBUTING, docs/).
+- Lernfeld-11-Dokumentation (Szenario X): Soll-Zustand, Schutzbedarf, IST-Zustand, Risikoanalyse, Maßnahmen, Prüfplan, Berichtsvorlage.
 
 ## [0.1.0] - TBD
 
