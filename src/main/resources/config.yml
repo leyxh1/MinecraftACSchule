@@ -8,6 +8,12 @@
 # Nach Änderungen: /ac reload (kein Neustart nötig).
 # Wie man die Werte sinnvoll einstellt: docs/checks.md
 
+violations:
+  # true: Erreicht ein Check seinen Höchstwert (kick-vl), bleibt er auf Maximum
+  # stehen (rot, "MAX" in /ac status) - kein Abbau, auch nicht nach Kick oder Rejoin.
+  # Zurücksetzen mit /ac reset <Spieler> (oder Server-Neustart).
+  lock-at-max: true
+
 # Meldungen an Admins (Berechtigung schoolanticheat.alerts, Standard: OPs)
 alerts:
   enabled: true

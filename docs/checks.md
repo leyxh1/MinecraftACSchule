@@ -17,6 +17,9 @@ die Schwerkraft? Wie weit ist das Ziel wirklich weg?
 
 - **Violation-Level (VL):** Jeder Verstoß gibt Punkte. Pro Sekunde sinken sie um `decay-per-second`.
   Erreicht das VL `kick-vl`, wird der Spieler gekickt. Ein einzelner Fehlalarm führt so nie zum Kick.
+- **Höchstwert bleibt stehen (`violations.lock-at-max`):** Hat ein Check sein `kick-vl` erreicht,
+  bleibt er bei diesem Spieler auf Maximum (z. B. `Fly 15/15 MAX`, rot) – kein Abbau, auch nach
+  Kick oder Rejoin. Mit `/ac reset <Spieler>` wird alles auf 0 gesetzt.
 - **Puffer (`buffer`):** Viele Checks melden erst, wenn etwas **mehrmals hintereinander** auffällt.
   Normale Bewegungen bauen den Puffer wieder ab.
 - **Meldungs-Pause (`flag-cooldown-ticks`):** verhindert, dass der Chat vollgespammt wird.

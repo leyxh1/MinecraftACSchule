@@ -97,10 +97,12 @@ public class AntiCheatPlugin extends JavaPlugin {
         return playerData.computeIfAbsent(player.getUniqueId(), id -> new PlayerData());
     }
 
-    /** Daten eines Spielers löschen (beim Verlassen des Servers). */
+    /**
+     * Bewegungsdaten eines Spielers löschen (beim Verlassen des Servers).
+     * Die Violation-Level bleiben erhalten, damit /ac status sie nach einem Kick noch zeigt.
+     */
     public void removeData(Player player) {
         playerData.remove(player.getUniqueId());
-        violationManager.reset(player.getUniqueId());
     }
 
     public List<Check> getChecks() {

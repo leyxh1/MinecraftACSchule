@@ -59,7 +59,8 @@ Die fertige Datei liegt danach in `build/libs/`.
 ## Nutzung
 | Befehl | Wirkung |
 |---|---|
-| `/ac status <Spieler>` | aktuelle Violation-Level pro Check |
+| `/ac status <Spieler>` | Violation-Level pro Check als Balken – auch nach einem Kick; Höchstwert bleibt rot mit `MAX` stehen |
+| `/ac reset <Spieler>` | alle Violation-Level eines Spielers auf 0 setzen |
 | `/ac alerts` | eigene Anticheat-Meldungen an/aus |
 | `/ac reload` | `config.yml` neu laden |
 

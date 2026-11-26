@@ -13,6 +13,9 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 - Befehl `/ac status|alerts|reload`, alle Grenzwerte in `config.yml`.
 - Doku: `docs/checks.md` (inkl. Grenzwerte einstellen), `docs/architecture.md`.
 
+- Höchstwert bleibt stehen (`violations.lock-at-max`): erreichte `kick-vl` werden in `/ac status` rot mit `MAX` angezeigt und nicht mehr abgebaut.
+- `/ac reset <Spieler>`; `/ac status` funktioniert auch für gekickte (offline) Spieler und zeigt Balken.
+
 ### Changed
 - `start.bat` kopiert das Plugin bei jedem Neustart, damit ein neuer Build sofort aktiv ist.
 

@@ -5,7 +5,9 @@ import dev.schule.anticheat.ViolationManager;
 import dev.schule.anticheat.checks.Check;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -15,14 +17,19 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Der Befehl /ac:
- *   /ac status <Spieler>  - zeigt die aktuellen Violation-Level
+ *   /ac status <Spieler>  - zeigt die aktuellen Violation-Level (auch nach einem Kick)
+ *   /ac reset <Spieler>   - setzt alle Violation-Level eines Spielers auf 0
  *   /ac alerts            - eigene Meldungen an/aus
  *   /ac reload            - config.yml neu laden
  */
 public class AcCommand implements CommandExecutor, TabCompleter {
+
+    /** Breite der Balkenanzeige in /ac status */
+    private static final int BAR_LENGTH = 20;
 
     private final AntiCheatPlugin plugin;
 
@@ -39,6 +46,7 @@ public class AcCommand implements CommandExecutor, TabCompleter {
         }
         switch (args[0].toLowerCase()) {
             case "status" -> status(sender, args);
+            case "reset" -> reset(sender, args);
             case "alerts" -> alerts(sender);
             case "reload" -> {
                 plugin.reloadConfig();
@@ -50,29 +58,79 @@ public class AcCommand implements CommandExecutor, TabCompleter {
     }
 
     private void status(CommandSender sender, String[] args) {
-        if (args.length < 2) {
-            sender.sendMessage(Component.text("Benutzung: /ac status <Spieler>", NamedTextColor.RED));
-            return;
-        }
-        Player target = Bukkit.getPlayerExact(args[1]);
+        OfflinePlayer target = findPlayer(sender, args, "/ac status <Spieler>");
         if (target == null) {
-            sender.sendMessage(Component.text("Spieler " + args[1] + " ist nicht online.", NamedTextColor.RED));
             return;
         }
+        UUID id = target.getUniqueId();
+        ViolationManager vm = plugin.getViolationManager();
 
         sender.sendMessage(Component.text("===== Anticheat-Status: " + target.getName() + " =====", NamedTextColor.GOLD));
-        ViolationManager vm = plugin.getViolationManager();
         for (Check check : plugin.getChecks()) {
-            double vl = vm.getVl(target.getUniqueId(), check.getName());
+            double vl = vm.getVl(id, check.getName());
             int kickVl = check.getKickVl();
-            // Farbe: grün = sauber, gelb = auffällig, rot = kurz vor dem Kick
-            NamedTextColor color = vl == 0 ? NamedTextColor.GREEN
+            boolean max = vm.isMaxed(id, check.getName());
+
+            // Farbe: grün = sauber, gelb = auffällig, rot = halb voll oder mehr / Maximum
+            NamedTextColor color = max ? NamedTextColor.DARK_RED
+                    : vl == 0 ? NamedTextColor.GREEN
                     : vl < kickVl / 2.0 ? NamedTextColor.YELLOW : NamedTextColor.RED;
-            String state = check.isEnabled() ? "" : " (aus)";
-            sender.sendMessage(Component.text(" " + check.getDisplayName() + state + ": ", NamedTextColor.GRAY)
-                    .append(Component.text(ViolationManager.format(vl) + " / " + kickVl, color)));
+
+            Component line = Component.text(" " + padRight(check.getDisplayName(), 11), NamedTextColor.GRAY)
+                    .append(bar(vl, kickVl, color))
+                    .append(Component.text(" " + ViolationManager.format(vl) + " / " + kickVl, color));
+            if (max) {
+                line = line.append(Component.text(" MAX", NamedTextColor.DARK_RED, TextDecoration.BOLD));
+            }
+            if (!check.isEnabled()) {
+                line = line.append(Component.text(" (aus)", NamedTextColor.DARK_GRAY));
+            }
+            sender.sendMessage(line);
         }
-        sender.sendMessage(Component.text(" Ping: " + target.getPing() + " ms", NamedTextColor.GRAY));
+
+        Player online = target.getPlayer();
+        sender.sendMessage(Component.text(online != null
+                ? " Online, Ping: " + online.getPing() + " ms"
+                : " Offline (z. B. gekickt)", NamedTextColor.GRAY));
+    }
+
+    private void reset(CommandSender sender, String[] args) {
+        OfflinePlayer target = findPlayer(sender, args, "/ac reset <Spieler>");
+        if (target == null) {
+            return;
+        }
+        plugin.getViolationManager().reset(target.getUniqueId());
+        sender.sendMessage(Component.text("Alle Violation-Level von " + target.getName() + " auf 0 gesetzt.",
+                NamedTextColor.GREEN));
+    }
+
+    /** Sucht einen Spieler - online oder schon einmal auf dem Server gewesen (z. B. nach einem Kick). */
+    private OfflinePlayer findPlayer(CommandSender sender, String[] args, String usage) {
+        if (args.length < 2) {
+            sender.sendMessage(Component.text("Benutzung: " + usage, NamedTextColor.RED));
+            return null;
+        }
+        OfflinePlayer target = Bukkit.getPlayerExact(args[1]);
+        if (target == null) {
+            target = Bukkit.getOfflinePlayerIfCached(args[1]);
+        }
+        if (target == null) {
+            sender.sendMessage(Component.text("Spieler " + args[1] + " war noch nie auf dem Server.", NamedTextColor.RED));
+        }
+        return target;
+    }
+
+    /** Balken wie [||||||||||          ], damit man den Stand auf einen Blick sieht. */
+    private static Component bar(double vl, int kickVl, NamedTextColor color) {
+        int filled = (int) Math.round(Math.min(vl / kickVl, 1.0) * BAR_LENGTH);
+        return Component.text("[", NamedTextColor.DARK_GRAY)
+                .append(Component.text("|".repeat(filled), color))
+                .append(Component.text("|".repeat(BAR_LENGTH - filled), NamedTextColor.DARK_GRAY))
+                .append(Component.text("]", NamedTextColor.DARK_GRAY));
+    }
+
+    private static String padRight(String text, int length) {
+        return text.length() >= length ? text : text + " ".repeat(length - text.length());
     }
 
     private void alerts(CommandSender sender) {
@@ -89,6 +147,8 @@ public class AcCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(Component.text("SchoolAntiCheat-Befehle:", NamedTextColor.GOLD));
         sender.sendMessage(Component.text(" /ac status <Spieler>", NamedTextColor.YELLOW)
                 .append(Component.text(" - Violation-Level anzeigen", NamedTextColor.GRAY)));
+        sender.sendMessage(Component.text(" /ac reset <Spieler>", NamedTextColor.YELLOW)
+                .append(Component.text(" - Violation-Level auf 0 setzen", NamedTextColor.GRAY)));
         sender.sendMessage(Component.text(" /ac alerts", NamedTextColor.YELLOW)
                 .append(Component.text(" - eigene Meldungen an/aus", NamedTextColor.GRAY)));
         sender.sendMessage(Component.text(" /ac reload", NamedTextColor.YELLOW)
@@ -101,12 +161,13 @@ public class AcCommand implements CommandExecutor, TabCompleter {
                                       @NotNull String alias, @NotNull String[] args) {
         List<String> result = new ArrayList<>();
         if (args.length == 1) {
-            for (String sub : List.of("status", "alerts", "reload")) {
+            for (String sub : List.of("status", "reset", "alerts", "reload")) {
                 if (sub.startsWith(args[0].toLowerCase())) {
                     result.add(sub);
                 }
             }
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("status")) {
+        } else if (args.length == 2
+                && (args[0].equalsIgnoreCase("status") || args[0].equalsIgnoreCase("reset"))) {
             for (Player online : Bukkit.getOnlinePlayers()) {
                 if (online.getName().toLowerCase().startsWith(args[1].toLowerCase())) {
                     result.add(online.getName());

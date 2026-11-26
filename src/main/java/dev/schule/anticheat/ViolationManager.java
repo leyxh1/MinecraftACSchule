@@ -31,6 +31,12 @@ public class ViolationManager {
     private final AntiCheatPlugin plugin;
     /** Spieler-UUID -> (Check-Name -> Violation-Level) */
     private final Map<UUID, Map<String, Double>> violations = new HashMap<>();
+    /**
+     * Checks, die beim Spieler schon den Höchstwert (kick-vl) erreicht haben.
+     * Diese VL bleiben auf Maximum stehen (kein Abbau), auch nach Kick oder Rejoin,
+     * bis ein Admin sie mit /ac reset zurücksetzt oder der Server neu startet.
+     */
+    private final Map<UUID, Set<String>> maxed = new HashMap<>();
     /** Admins, die die Meldungen mit /ac alerts ausgeschaltet haben */
     private final Set<UUID> alertsOff = new HashSet<>();
     private final Path logFile;
@@ -42,11 +48,16 @@ public class ViolationManager {
 
     /** Ein Check hat einen Verstoß erkannt. */
     public void flag(Player player, Check check, double amount, String details) {
-        // 1) VL erhöhen
+        // 1) VL erhöhen - aber nie über den Höchstwert (kick-vl) hinaus
         Map<String, Double> playerVl = violations.computeIfAbsent(player.getUniqueId(), id -> new HashMap<>());
-        double vl = playerVl.getOrDefault(check.getName(), 0.0) + amount;
-        playerVl.put(check.getName(), vl);
         int kickVl = check.getKickVl();
+        double vl = Math.min(playerVl.getOrDefault(check.getName(), 0.0) + amount, kickVl);
+        playerVl.put(check.getName(), vl);
+
+        // Höchstwert erreicht? Dann bleibt der Check ab jetzt auf Maximum stehen
+        if (vl >= kickVl && plugin.getConfig().getBoolean("violations.lock-at-max", true)) {
+            maxed.computeIfAbsent(player.getUniqueId(), id -> new HashSet<>()).add(check.getName());
+        }
 
         // 2) Admins warnen
         String text = player.getName() + " -> " + check.getDisplayName()
@@ -67,7 +78,10 @@ public class ViolationManager {
     }
 
     private void kick(Player player, Check check) {
-        violations.remove(player.getUniqueId());  // nach dem Kick fängt er wieder bei 0 an
+        // Ohne lock-at-max fängt der Spieler nach dem Kick wieder bei 0 an
+        if (!plugin.getConfig().getBoolean("violations.lock-at-max", true)) {
+            violations.remove(player.getUniqueId());
+        }
         String message = plugin.getConfig()
                 .getString("kick.message", "Du wurdest vom Anticheat gekickt ({check}).")
                 .replace("{check}", check.getDisplayName());
@@ -80,12 +94,17 @@ public class ViolationManager {
 
     /** Wird jede Sekunde aufgerufen: alle VL ein Stück verringern. */
     public void decay() {
-        Iterator<Map<String, Double>> players = violations.values().iterator();
+        Iterator<Map.Entry<UUID, Map<String, Double>>> players = violations.entrySet().iterator();
         while (players.hasNext()) {
-            Map<String, Double> playerVl = players.next();
+            Map.Entry<UUID, Map<String, Double>> playerEntry = players.next();
+            Map<String, Double> playerVl = playerEntry.getValue();
+            Set<String> lockedChecks = maxed.getOrDefault(playerEntry.getKey(), Set.of());
             Iterator<Map.Entry<String, Double>> entries = playerVl.entrySet().iterator();
             while (entries.hasNext()) {
                 Map.Entry<String, Double> entry = entries.next();
+                if (lockedChecks.contains(entry.getKey())) {
+                    continue;   // auf Maximum eingefroren -> kein Abbau
+                }
                 Check check = plugin.getCheck(entry.getKey());
                 double decay = check != null ? check.getDecay() : 1.0;
                 double newVl = entry.getValue() - decay;
@@ -107,8 +126,15 @@ public class ViolationManager {
         return playerVl == null ? 0.0 : playerVl.getOrDefault(checkName, 0.0);
     }
 
+    /** Hat der Spieler bei diesem Check schon den Höchstwert erreicht? */
+    public boolean isMaxed(UUID player, String checkName) {
+        return maxed.getOrDefault(player, Set.of()).contains(checkName);
+    }
+
+    /** Alle VL eines Spielers löschen (für /ac reset). */
     public void reset(UUID player) {
         violations.remove(player);
+        maxed.remove(player);
     }
 
     /** Schaltet die Meldungen für einen Admin an/aus. Gibt true zurück, wenn sie jetzt AN sind. */
