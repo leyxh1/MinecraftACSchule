@@ -1,5 +1,4 @@
-# Aufgabenteilung (Vorschlag)
-
+# Aufgabenteilung
 Beide bauen Checks und schreiben einen Teil der Lernfeld-Doku. Jede:r reviewt die PRs der
 anderen Person – so haben beide gleich viele Commits, PRs und Reviews.
 
