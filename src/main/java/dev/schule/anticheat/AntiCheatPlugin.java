@@ -32,6 +32,7 @@ public class AntiCheatPlugin extends JavaPlugin {
     /** Gespeicherte Daten pro Spieler (siehe PlayerData). */
     private final Map<UUID, PlayerData> playerData = new HashMap<>();
     private ViolationManager violationManager;
+    private KickLog kickLog;
 
     /** Wird aufgerufen, wenn das Plugin geladen und aktiviert wird. */
     @Override
@@ -40,6 +41,7 @@ public class AntiCheatPlugin extends JavaPlugin {
         saveDefaultConfig();
 
         violationManager = new ViolationManager(this);
+        kickLog = new KickLog(this);   // liest vorhandene kicks.log ein
 
         // Alle Checks registrieren
         checks.add(new FlyCheck(this));
@@ -117,6 +119,10 @@ public class AntiCheatPlugin extends JavaPlugin {
             }
         }
         return null;
+    }
+
+    public KickLog getKickLog() {
+        return kickLog;
     }
 
     public ViolationManager getViolationManager() {

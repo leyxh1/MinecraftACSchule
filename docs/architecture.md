@@ -5,6 +5,7 @@ src/main/java/dev/schule/anticheat/
 ├── AntiCheatPlugin.java      Einstiegspunkt: lädt Config, registriert Checks, Listener, Befehl, Timer
 ├── EventListener.java        empfängt Server-Ereignisse und verteilt sie an alle Checks
 ├── ViolationManager.java     VL zählen, Admins warnen, Logdatei, Kick, VL abbauen (decay)
+├── KickLog.java              Kick-Liste für /ac kicks, gespeichert in kicks.log
 ├── checks/
 │   ├── Check.java            Basisklasse: Config lesen, flag(), allgemeine Ausnahmen
 │   ├── FlyCheck.java
@@ -56,3 +57,4 @@ flowchart LR
 - **Grenzwerte in der `config.yml`:** Einstellen ohne neu zu programmieren (Soll-Kriterium S7).
 - **Logdatei ohne IP-Adressen:** Datensparsamkeit nach DSGVO (Soll-Kriterium S6).
 - **Nur Kick, kein Bann:** Über einen dauerhaften Ausschluss entscheidet ein Mensch (DSGVO Art. 22).
+  `/ac kicks` zeigt dafür alle Kicks mit einem [Bannen]-Knopf, der den Befehl nur vorschlägt.

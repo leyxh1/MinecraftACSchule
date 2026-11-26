@@ -1,6 +1,7 @@
 package dev.schule.anticheat.commands;
 
 import dev.schule.anticheat.AntiCheatPlugin;
+import dev.schule.anticheat.KickLog;
 import dev.schule.anticheat.ViolationManager;
 import dev.schule.anticheat.checks.Check;
 import net.kyori.adventure.text.Component;
@@ -15,6 +16,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -23,6 +25,7 @@ import java.util.UUID;
  * Der Befehl /ac:
  *   /ac status <Spieler>  - zeigt die aktuellen Violation-Level (auch nach einem Kick)
  *   /ac reset <Spieler>   - setzt alle Violation-Level eines Spielers auf 0
+ *   /ac kicks [Spieler]   - letzte Kicks durch das Anticheat, mit [Bannen]-Knopf
  *   /ac alerts            - eigene Meldungen an/aus
  *   /ac reload            - config.yml neu laden
  */
@@ -30,6 +33,9 @@ public class AcCommand implements CommandExecutor, TabCompleter {
 
     /** Breite der Balkenanzeige in /ac status */
     private static final int BAR_LENGTH = 20;
+    /** So viele Kicks zeigt /ac kicks an */
+    private static final int KICK_LIST_LENGTH = 10;
+    private static final DateTimeFormatter KICK_TIME = DateTimeFormatter.ofPattern("dd.MM. HH:mm");
 
     private final AntiCheatPlugin plugin;
 
@@ -47,6 +53,7 @@ public class AcCommand implements CommandExecutor, TabCompleter {
         switch (args[0].toLowerCase()) {
             case "status" -> status(sender, args);
             case "reset" -> reset(sender, args);
+            case "kicks" -> kicks(sender, args);
             case "alerts" -> alerts(sender);
             case "reload" -> {
                 plugin.reloadConfig();
@@ -104,6 +111,29 @@ public class AcCommand implements CommandExecutor, TabCompleter {
                 NamedTextColor.GREEN));
     }
 
+    /**
+     * /ac kicks [Spieler]: die letzten Kicks durch das Anticheat (neueste zuerst),
+     * jeweils mit [Bannen]-Knopf.
+     */
+    private void kicks(CommandSender sender, String[] args) {
+        String player = args.length >= 2 ? args[1] : null;
+        List<KickLog.Entry> entries = plugin.getKickLog().latest(player, KICK_LIST_LENGTH);
+
+        String title = player == null ? "Letzte Kicks" : "Kicks von " + player;
+        sender.sendMessage(Component.text("===== " + title + " =====", NamedTextColor.GOLD));
+        if (entries.isEmpty()) {
+            sender.sendMessage(Component.text(" Keine Kicks gespeichert.", NamedTextColor.GREEN));
+            return;
+        }
+        for (KickLog.Entry entry : entries) {
+            sender.sendMessage(Component.text(" " + entry.time().format(KICK_TIME) + " ", NamedTextColor.GRAY)
+                    .append(Component.text(entry.player(), NamedTextColor.WHITE))
+                    .append(Component.text(" - " + entry.check() + " (" + entry.vl() + ") ", NamedTextColor.RED))
+                    .append(ViolationManager.banButton(entry.player(), entry.check())));
+        }
+        sender.sendMessage(Component.text(" Alle Kicks: plugins/SchoolAntiCheat/kicks.log", NamedTextColor.DARK_GRAY));
+    }
+
     /** Sucht einen Spieler - online oder schon einmal auf dem Server gewesen (z. B. nach einem Kick). */
     private OfflinePlayer findPlayer(CommandSender sender, String[] args, String usage) {
         if (args.length < 2) {
@@ -149,6 +179,8 @@ public class AcCommand implements CommandExecutor, TabCompleter {
                 .append(Component.text(" - Violation-Level anzeigen", NamedTextColor.GRAY)));
         sender.sendMessage(Component.text(" /ac reset <Spieler>", NamedTextColor.YELLOW)
                 .append(Component.text(" - Violation-Level auf 0 setzen", NamedTextColor.GRAY)));
+        sender.sendMessage(Component.text(" /ac kicks [Spieler]", NamedTextColor.YELLOW)
+                .append(Component.text(" - letzte Kicks (mit [Bannen]-Knopf)", NamedTextColor.GRAY)));
         sender.sendMessage(Component.text(" /ac alerts", NamedTextColor.YELLOW)
                 .append(Component.text(" - eigene Meldungen an/aus", NamedTextColor.GRAY)));
         sender.sendMessage(Component.text(" /ac reload", NamedTextColor.YELLOW)
@@ -161,13 +193,13 @@ public class AcCommand implements CommandExecutor, TabCompleter {
                                       @NotNull String alias, @NotNull String[] args) {
         List<String> result = new ArrayList<>();
         if (args.length == 1) {
-            for (String sub : List.of("status", "reset", "alerts", "reload")) {
+            for (String sub : List.of("status", "reset", "kicks", "alerts", "reload")) {
                 if (sub.startsWith(args[0].toLowerCase())) {
                     result.add(sub);
                 }
             }
         } else if (args.length == 2
-                && (args[0].equalsIgnoreCase("status") || args[0].equalsIgnoreCase("reset"))) {
+                && List.of("status", "reset", "kicks").contains(args[0].toLowerCase())) {
             for (Player online : Bukkit.getOnlinePlayers()) {
                 if (online.getName().toLowerCase().startsWith(args[1].toLowerCase())) {
                     result.add(online.getName());

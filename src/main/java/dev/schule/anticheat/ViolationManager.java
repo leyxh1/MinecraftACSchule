@@ -2,6 +2,8 @@ package dev.schule.anticheat;
 
 import dev.schule.anticheat.checks.Check;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -73,11 +75,11 @@ public class ViolationManager {
 
         // 4) Kicken, wenn der Grenzwert erreicht ist
         if (plugin.getConfig().getBoolean("kick.enabled", true) && vl >= kickVl) {
-            kick(player, check);
+            kick(player, check, vl);
         }
     }
 
-    private void kick(Player player, Check check) {
+    private void kick(Player player, Check check, double vl) {
         // Ohne lock-at-max fängt der Spieler nach dem Kick wieder bei 0 an
         if (!plugin.getConfig().getBoolean("violations.lock-at-max", true)) {
             violations.remove(player.getUniqueId());
@@ -85,9 +87,15 @@ public class ViolationManager {
         String message = plugin.getConfig()
                 .getString("kick.message", "Du wurdest vom Anticheat gekickt ({check}).")
                 .replace("{check}", check.getDisplayName());
-        sendAlert(Component.text(player.getName() + " wurde gekickt (" + check.getDisplayName() + ")",
-                NamedTextColor.RED));
+        // Meldung an Admins mit anklickbarem [Bannen]-Knopf (schlägt den Befehl nur vor -
+        // ob wirklich gebannt wird, entscheidet der Admin)
+        sendAlert(Component.text(player.getName() + " wurde gekickt (" + check.getDisplayName() + ") ",
+                        NamedTextColor.RED)
+                .append(banButton(player.getName(), check.getDisplayName())));
         writeLog("KICK", player.getName() + " -> " + check.getDisplayName());
+        // In die Kick-Liste eintragen (/ac kicks, Datei kicks.log)
+        plugin.getKickLog().add(player.getName(), check.getDisplayName(),
+                "VL " + format(vl) + "/" + check.getKickVl());
         // Kick erst im nächsten Tick, damit das laufende Ereignis sauber zu Ende läuft
         Bukkit.getScheduler().runTask(plugin, () -> player.kick(Component.text(message, NamedTextColor.RED)));
     }
@@ -172,6 +180,17 @@ public class ViolationManager {
         } catch (IOException e) {
             plugin.getLogger().warning("Konnte nicht in violations.log schreiben: " + e.getMessage());
         }
+    }
+
+    /**
+     * Anklickbarer Text [Bannen]: Beim Klick steht der Ban-Befehl im Chat,
+     * der Admin muss ihn nur noch mit Enter bestätigen.
+     */
+    public static Component banButton(String playerName, String checkName) {
+        String command = "/ban " + playerName + " Cheating (" + checkName + ")";
+        return Component.text("[Bannen]", NamedTextColor.DARK_RED)
+                .clickEvent(ClickEvent.suggestCommand(command))
+                .hoverEvent(HoverEvent.showText(Component.text("Klicken: " + command, NamedTextColor.GRAY)));
     }
 
     public static String format(double value) {

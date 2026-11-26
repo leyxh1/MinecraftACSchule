@@ -14,6 +14,7 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 - Doku: `docs/checks.md` (inkl. Grenzwerte einstellen), `docs/architecture.md`.
 
 - Höchstwert bleibt stehen (`violations.lock-at-max`): erreichte `kick-vl` werden in `/ac status` rot mit `MAX` angezeigt und nicht mehr abgebaut.
+- Kick-Log: `/ac kicks [Spieler]` zeigt die letzten Kicks mit Zeit, Check und VL; gespeichert in `kicks.log`. Kick-Meldung und Liste haben einen anklickbaren [Bannen]-Knopf.
 - `/ac reset <Spieler>`; `/ac status` funktioniert auch für gekickte (offline) Spieler und zeigt Balken.
 
 ### Changed

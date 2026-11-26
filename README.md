@@ -61,12 +61,15 @@ Die fertige Datei liegt danach in `build/libs/`.
 |---|---|
 | `/ac status <Spieler>` | Violation-Level pro Check als Balken – auch nach einem Kick; Höchstwert bleibt rot mit `MAX` stehen |
 | `/ac reset <Spieler>` | alle Violation-Level eines Spielers auf 0 setzen |
+| `/ac kicks [Spieler]` | letzte Kicks durch das Anticheat mit Zeit und Grund, jeweils mit anklickbarem **[Bannen]** |
 | `/ac alerts` | eigene Anticheat-Meldungen an/aus |
 | `/ac reload` | `config.yml` neu laden |
 
 Admins (OPs) sehen Meldungen wie
 `[AC] Spieler verdächtig: Speed (VL 3,0/20) 0,85 > 0,62 Blöcke/Tick`.
-Alle Meldungen landen auch in `plugins/SchoolAntiCheat/violations.log`.
+Alle Meldungen landen auch in `plugins/SchoolAntiCheat/violations.log`, alle Kicks zusätzlich in
+`plugins/SchoolAntiCheat/kicks.log` (bleibt nach einem Neustart erhalten). Gebannt wird nie
+automatisch: Der **[Bannen]**-Knopf schlägt nur den `/ban`-Befehl vor – die Entscheidung trifft ein Admin.
 
 ## Projektstruktur
 ```
