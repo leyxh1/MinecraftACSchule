@@ -94,6 +94,7 @@ Startskript und gehärtete Konfiguration liegen in [`testserver/`](testserver). 
 `testserver\start.bat` genügt – Details in der [Testserver-Anleitung](docs/testserver.md).
 
 ## Dokumentation
+- **[Projektdokumentation LF11](docs/Projektdokumentation-LF11.md)** – die komplette Abgabe-Doku
 - [Testserver-Anleitung](docs/testserver.md)
 - [Lernfeld 11 – Sicherheitsanalyse und Bewertung](docs/lf11b/README.md)
 - [Architektur](docs/architecture.md)
