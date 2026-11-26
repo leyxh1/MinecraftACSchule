@@ -73,7 +73,11 @@ public class ViolationManager {
         // 3) Logdatei
         writeLog("FLAG", text);
 
-        // 4) Kicken, wenn der Grenzwert erreicht ist
+        // 4) In der Aufnahme (Replay) an genau dieser Stelle vermerken
+        plugin.getReplayRecorder().markFlag(player,
+                check.getDisplayName() + " " + format(vl) + "/" + kickVl + ": " + details);
+
+        // 5) Kicken, wenn der Grenzwert erreicht ist
         if (plugin.getConfig().getBoolean("kick.enabled", true) && vl >= kickVl) {
             kick(player, check, vl);
         }
@@ -87,15 +91,27 @@ public class ViolationManager {
         String message = plugin.getConfig()
                 .getString("kick.message", "Du wurdest vom Anticheat gekickt ({check}).")
                 .replace("{check}", check.getDisplayName());
-        // Meldung an Admins mit anklickbarem [Bannen]-Knopf (schlägt den Befehl nur vor -
-        // ob wirklich gebannt wird, entscheidet der Admin)
-        sendAlert(Component.text(player.getName() + " wurde gekickt (" + check.getDisplayName() + ") ",
-                        NamedTextColor.RED)
-                .append(banButton(player.getName(), check.getDisplayName())));
-        writeLog("KICK", player.getName() + " -> " + check.getDisplayName());
+        // Die letzten Sekunden als Replay speichern ("Dashcam"-Aufnahme)
+        int replayId = 0;
+        if (plugin.getConfig().getBoolean("replay.enabled", true)) {
+            replayId = plugin.getReplayManager().save(player, check.getDisplayName(),
+                    plugin.getReplayRecorder().snapshot(player));
+        }
+
+        // Meldung an Admins mit anklickbaren Knöpfen [Replay] und [Bannen]
+        // ([Bannen] schlägt den Befehl nur vor - ob wirklich gebannt wird, entscheidet der Admin)
+        Component alert = Component.text(player.getName() + " wurde gekickt (" + check.getDisplayName() + ") ",
+                NamedTextColor.RED);
+        if (replayId > 0) {
+            alert = alert.append(replayButton(replayId)).append(Component.text(" "));
+        }
+        sendAlert(alert.append(banButton(player.getName(), check.getDisplayName())));
+        writeLog("KICK", player.getName() + " -> " + check.getDisplayName()
+                + (replayId > 0 ? " (Replay #" + replayId + ")" : ""));
+
         // In die Kick-Liste eintragen (/ac kicks, Datei kicks.log)
         plugin.getKickLog().add(player.getName(), check.getDisplayName(),
-                "VL " + format(vl) + "/" + check.getKickVl());
+                "VL " + format(vl) + "/" + check.getKickVl(), replayId);
         // Kick erst im nächsten Tick, damit das laufende Ereignis sauber zu Ende läuft
         Bukkit.getScheduler().runTask(plugin, () -> player.kick(Component.text(message, NamedTextColor.RED)));
     }
@@ -191,6 +207,15 @@ public class ViolationManager {
         return Component.text("[Bannen]", NamedTextColor.DARK_RED)
                 .clickEvent(ClickEvent.suggestCommand(command))
                 .hoverEvent(HoverEvent.showText(Component.text("Klicken: " + command, NamedTextColor.GRAY)));
+    }
+
+    /** Anklickbarer Text [Replay]: startet das Replay mit dieser Nummer. */
+    public static Component replayButton(int replayId) {
+        String command = "/ac replay " + replayId;
+        return Component.text("[Replay]", NamedTextColor.AQUA)
+                .clickEvent(ClickEvent.runCommand(command))
+                .hoverEvent(HoverEvent.showText(Component.text("Aufnahme der letzten Sekunden vor dem Kick ansehen",
+                        NamedTextColor.GRAY)));
     }
 
     public static String format(double value) {

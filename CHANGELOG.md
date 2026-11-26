@@ -14,6 +14,7 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 - Doku: `docs/checks.md` (inkl. Grenzwerte einstellen), `docs/architecture.md`.
 
 - Höchstwert bleibt stehen (`violations.lock-at-max`): erreichte `kick-vl` werden in `/ac status` rot mit `MAX` angezeigt und nicht mehr abgebaut.
+- Replays: Dashcam-Aufnahme der letzten 30 s jedes Spielers; beim Kick gespeichert in `replays/`. `/ac replay <Nr>` spielt sie mit einer Spielerpuppe (Mannequin) im Zuschauermodus ab, inkl. Meldungen zur richtigen Zeit. [Replay]-Knopf in Kick-Meldung und `/ac kicks`.
 - Kick-Log: `/ac kicks [Spieler]` zeigt die letzten Kicks mit Zeit, Check und VL; gespeichert in `kicks.log`. Kick-Meldung und Liste haben einen anklickbaren [Bannen]-Knopf.
 - `/ac reset <Spieler>`; `/ac status` funktioniert auch für gekickte (offline) Spieler und zeigt Balken.
 

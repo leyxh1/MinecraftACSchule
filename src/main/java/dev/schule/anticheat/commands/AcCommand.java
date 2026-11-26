@@ -4,7 +4,9 @@ import dev.schule.anticheat.AntiCheatPlugin;
 import dev.schule.anticheat.KickLog;
 import dev.schule.anticheat.ViolationManager;
 import dev.schule.anticheat.checks.Check;
+import dev.schule.anticheat.replay.ReplayManager;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
@@ -25,7 +27,8 @@ import java.util.UUID;
  * Der Befehl /ac:
  *   /ac status <Spieler>  - zeigt die aktuellen Violation-Level (auch nach einem Kick)
  *   /ac reset <Spieler>   - setzt alle Violation-Level eines Spielers auf 0
- *   /ac kicks [Spieler]   - letzte Kicks durch das Anticheat, mit [Bannen]-Knopf
+ *   /ac kicks [Spieler]   - letzte Kicks durch das Anticheat, mit [Replay]- und [Bannen]-Knopf
+ *   /ac replay [Nr|stop]  - Aufnahme der letzten Sekunden vor einem Kick abspielen
  *   /ac alerts            - eigene Meldungen an/aus
  *   /ac reload            - config.yml neu laden
  */
@@ -54,6 +57,7 @@ public class AcCommand implements CommandExecutor, TabCompleter {
             case "status" -> status(sender, args);
             case "reset" -> reset(sender, args);
             case "kicks" -> kicks(sender, args);
+            case "replay" -> replay(sender, args);
             case "alerts" -> alerts(sender);
             case "reload" -> {
                 plugin.reloadConfig();
@@ -129,9 +133,65 @@ public class AcCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(Component.text(" " + entry.time().format(KICK_TIME) + " ", NamedTextColor.GRAY)
                     .append(Component.text(entry.player(), NamedTextColor.WHITE))
                     .append(Component.text(" - " + entry.check() + " (" + entry.vl() + ") ", NamedTextColor.RED))
+                    .append(entry.replayId() > 0
+                            ? ViolationManager.replayButton(entry.replayId()).append(Component.text(" "))
+                            : Component.empty())
                     .append(ViolationManager.banButton(entry.player(), entry.check())));
         }
         sender.sendMessage(Component.text(" Alle Kicks: plugins/SchoolAntiCheat/kicks.log", NamedTextColor.DARK_GRAY));
+    }
+
+    /**
+     * /ac replay          - Liste der gespeicherten Replays
+     * /ac replay <Nummer> - Replay abspielen
+     * /ac replay stop     - laufendes Replay beenden
+     */
+    private void replay(CommandSender sender, String[] args) {
+        ReplayManager replays = plugin.getReplayManager();
+
+        // Liste
+        if (args.length < 2 || args[1].equalsIgnoreCase("list")) {
+            List<ReplayManager.Info> list = replays.latest(KICK_LIST_LENGTH);
+            sender.sendMessage(Component.text("===== Replays (letzte Sekunden vor einem Kick) =====", NamedTextColor.GOLD));
+            if (list.isEmpty()) {
+                sender.sendMessage(Component.text(" Noch keine Replays gespeichert.", NamedTextColor.GREEN));
+            }
+            for (ReplayManager.Info info : list) {
+                sender.sendMessage(Component.text(" #" + info.id() + " " + info.time().format(KICK_TIME) + " ", NamedTextColor.GRAY)
+                        .append(Component.text(info.player(), NamedTextColor.WHITE))
+                        .append(Component.text(" - " + info.check() + " ", NamedTextColor.RED))
+                        .append(Component.text("[Ansehen]", NamedTextColor.AQUA)
+                                .clickEvent(ClickEvent.runCommand("/ac replay " + info.id()))));
+            }
+            return;
+        }
+
+        if (!(sender instanceof Player viewer)) {
+            sender.sendMessage(Component.text("Replays kann man nur im Spiel ansehen.", NamedTextColor.RED));
+            return;
+        }
+
+        // Stopp
+        if (args[1].equalsIgnoreCase("stop")) {
+            boolean wasRunning = plugin.getReplayViewer().stop(viewer);
+            viewer.sendMessage(Component.text(wasRunning ? "Replay beendet." : "Es läuft kein Replay.", NamedTextColor.GRAY));
+            return;
+        }
+
+        // Abspielen
+        int id;
+        try {
+            id = Integer.parseInt(args[1].replace("#", ""));
+        } catch (NumberFormatException e) {
+            viewer.sendMessage(Component.text("Benutzung: /ac replay [Nummer|stop]", NamedTextColor.RED));
+            return;
+        }
+        ReplayManager.Info info = replays.get(id);
+        if (info == null) {
+            viewer.sendMessage(Component.text("Replay #" + id + " gibt es nicht.", NamedTextColor.RED));
+            return;
+        }
+        plugin.getReplayViewer().start(viewer, info);
     }
 
     /** Sucht einen Spieler - online oder schon einmal auf dem Server gewesen (z. B. nach einem Kick). */
@@ -181,6 +241,8 @@ public class AcCommand implements CommandExecutor, TabCompleter {
                 .append(Component.text(" - Violation-Level auf 0 setzen", NamedTextColor.GRAY)));
         sender.sendMessage(Component.text(" /ac kicks [Spieler]", NamedTextColor.YELLOW)
                 .append(Component.text(" - letzte Kicks (mit [Bannen]-Knopf)", NamedTextColor.GRAY)));
+        sender.sendMessage(Component.text(" /ac replay [Nummer|stop]", NamedTextColor.YELLOW)
+                .append(Component.text(" - Aufnahme vor einem Kick ansehen", NamedTextColor.GRAY)));
         sender.sendMessage(Component.text(" /ac alerts", NamedTextColor.YELLOW)
                 .append(Component.text(" - eigene Meldungen an/aus", NamedTextColor.GRAY)));
         sender.sendMessage(Component.text(" /ac reload", NamedTextColor.YELLOW)
@@ -193,7 +255,7 @@ public class AcCommand implements CommandExecutor, TabCompleter {
                                       @NotNull String alias, @NotNull String[] args) {
         List<String> result = new ArrayList<>();
         if (args.length == 1) {
-            for (String sub : List.of("status", "reset", "kicks", "alerts", "reload")) {
+            for (String sub : List.of("status", "reset", "kicks", "replay", "alerts", "reload")) {
                 if (sub.startsWith(args[0].toLowerCase())) {
                     result.add(sub);
                 }
@@ -204,6 +266,11 @@ public class AcCommand implements CommandExecutor, TabCompleter {
                 if (online.getName().toLowerCase().startsWith(args[1].toLowerCase())) {
                     result.add(online.getName());
                 }
+            }
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("replay")) {
+            result.add("stop");
+            for (ReplayManager.Info info : plugin.getReplayManager().latest(KICK_LIST_LENGTH)) {
+                result.add(String.valueOf(info.id()));
             }
         }
         return result;

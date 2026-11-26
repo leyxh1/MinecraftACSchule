@@ -18,13 +18,13 @@ import java.util.List;
  * nachsehen können, wer wann weswegen gekickt wurde - und ihn dann bannen.
  *
  * Gespeichert wird in plugins/SchoolAntiCheat/kicks.log, eine Zeile pro Kick:
- *   2026-11-26 03:20:11 | xSalkinTV | Fly | VL 15/15
+ *   2026-11-26 03:20:11 | xSalkinTV | Fly | VL 15/15 | Replay #3
  * Keine IP-Adressen (Datensparsamkeit).
  */
 public class KickLog {
 
-    /** Ein einzelner Kick. */
-    public record Entry(LocalDateTime time, String player, String check, String vl) {
+    /** Ein einzelner Kick. replayId = Nummer der Aufnahme (0 = keine). */
+    public record Entry(LocalDateTime time, String player, String check, String vl, int replayId) {
     }
 
     private static final DateTimeFormatter FILE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -42,11 +42,11 @@ public class KickLog {
     }
 
     /** Neuen Kick speichern - im Speicher und in der Datei. */
-    public void add(String player, String check, String vl) {
-        Entry entry = new Entry(LocalDateTime.now(), player, check, vl);
+    public void add(String player, String check, String vl, int replayId) {
+        Entry entry = new Entry(LocalDateTime.now(), player, check, vl, replayId);
         remember(entry);
         String line = entry.time().format(FILE_TIME) + " | " + player + " | " + check + " | " + vl
-                + System.lineSeparator();
+                + " | Replay #" + replayId + System.lineSeparator();
         try {
             Files.createDirectories(file.getParent());
             Files.writeString(file, line, StandardCharsets.UTF_8,
@@ -86,9 +86,11 @@ public class KickLog {
                     continue;   // kaputte Zeile überspringen
                 }
                 try {
-                    remember(new Entry(LocalDateTime.parse(parts[0], FILE_TIME), parts[1], parts[2], parts[3]));
-                } catch (DateTimeParseException ignored) {
-                    // Zeile mit falschem Datum überspringen
+                    // Ältere Zeilen haben noch keine Replay-Nummer -> 0
+                    int replayId = parts.length >= 5 ? Integer.parseInt(parts[4].replace("Replay #", "").trim()) : 0;
+                    remember(new Entry(LocalDateTime.parse(parts[0], FILE_TIME), parts[1], parts[2], parts[3], replayId));
+                } catch (DateTimeParseException | NumberFormatException ignored) {
+                    // kaputte Zeile überspringen
                 }
             }
         } catch (IOException e) {

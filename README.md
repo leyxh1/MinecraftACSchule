@@ -61,7 +61,16 @@ Die fertige Datei liegt danach in `build/libs/`.
 |---|---|
 | `/ac status <Spieler>` | Violation-Level pro Check als Balken – auch nach einem Kick; Höchstwert bleibt rot mit `MAX` stehen |
 | `/ac reset <Spieler>` | alle Violation-Level eines Spielers auf 0 setzen |
-| `/ac kicks [Spieler]` | letzte Kicks durch das Anticheat mit Zeit und Grund, jeweils mit anklickbarem **[Bannen]** |
+| `/ac kicks [Spieler]` | letzte Kicks durch das Anticheat mit Zeit und Grund, jeweils mit **[Replay]** und **[Bannen]** |
+| `/ac replay [Nummer\|stop]` | Aufnahme der letzten 30 Sekunden vor einem Kick abspielen |
+
+### Replays: erst ansehen, dann bannen
+Das Anticheat zeichnet von jedem Spieler ständig die letzten 30 Sekunden auf (wie eine Dashcam).
+Wird jemand gekickt, wird diese Aufnahme gespeichert. Mit `/ac replay <Nummer>` (oder Klick auf
+**[Replay]**) läuft eine Spielerpuppe mit dem Skin des Verdächtigen genau seinen Weg nach –
+nur für den zuschauenden Admin sichtbar. Der Admin schaut im Zuschauermodus zu; Zeit und
+Anticheat-Meldungen erscheinen genau in dem Moment, in dem sie passiert sind (rote Partikel).
+Am Ende entscheidet der Admin per **[Bannen]**-Knopf.
 | `/ac alerts` | eigene Anticheat-Meldungen an/aus |
 | `/ac reload` | `config.yml` neu laden |
 

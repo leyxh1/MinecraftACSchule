@@ -6,6 +6,11 @@ src/main/java/dev/schule/anticheat/
 ├── EventListener.java        empfängt Server-Ereignisse und verteilt sie an alle Checks
 ├── ViolationManager.java     VL zählen, Admins warnen, Logdatei, Kick, VL abbauen (decay)
 ├── KickLog.java              Kick-Liste für /ac kicks, gespeichert in kicks.log
+├── replay/
+│   ├── ReplayFrame.java      ein Bild der Aufnahme (Position, Blick, Schlag, Meldung)
+│   ├── ReplayRecorder.java   "Dashcam": letzte 30 s jedes Spielers im Speicher
+│   ├── ReplayManager.java    Replays als Dateien speichern/laden (replays/)
+│   └── ReplayViewer.java     Abspielen mit Spielerpuppe (Mannequin) für den Admin
 ├── checks/
 │   ├── Check.java            Basisklasse: Config lesen, flag(), allgemeine Ausnahmen
 │   ├── FlyCheck.java

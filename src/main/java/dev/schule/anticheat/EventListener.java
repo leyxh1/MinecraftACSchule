@@ -119,6 +119,7 @@ public class EventListener implements Listener {
             return;
         }
         PlayerData data = plugin.getData(player);
+        plugin.getReplayRecorder().markAttack(player);   // für das Replay
         for (Check check : plugin.getChecks()) {
             if (check.isEnabled()) {
                 check.onAttack(player, data, event.getEntity());
@@ -134,6 +135,7 @@ public class EventListener implements Listener {
         }
         Player player = event.getPlayer();
         PlayerData data = plugin.getData(player);
+        plugin.getReplayRecorder().markSwing(player);    // für das Replay
         for (Check check : plugin.getChecks()) {
             if (check.isEnabled()) {
                 check.onSwing(player, data);
@@ -213,6 +215,7 @@ public class EventListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
         plugin.removeData(event.getPlayer());
+        plugin.getReplayRecorder().remove(event.getPlayer());
     }
 
     /** Unterschied zwischen zwei Blickrichtungen in Grad (0 bis 180). */

@@ -14,6 +14,14 @@ violations:
   # Zurücksetzen mit /ac reset <Spieler> (oder Server-Neustart).
   lock-at-max: true
 
+# Replays: Von jedem Spieler werden ständig die letzten Sekunden aufgezeichnet
+# (wie eine Dashcam). Wird jemand gekickt, wird die Aufnahme gespeichert und
+# kann mit /ac replay <Nummer> angesehen werden - bevor man bannt.
+replay:
+  enabled: true
+  seconds: 30        # so viele Sekunden vor dem Kick werden gespeichert
+  max-files: 50      # ältere Replays werden automatisch gelöscht
+
 # Meldungen an Admins (Berechtigung schoolanticheat.alerts, Standard: OPs)
 alerts:
   enabled: true

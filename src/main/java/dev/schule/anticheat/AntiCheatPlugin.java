@@ -9,6 +9,9 @@ import dev.schule.anticheat.checks.ReachCheck;
 import dev.schule.anticheat.checks.SpeedCheck;
 import dev.schule.anticheat.commands.AcCommand;
 import dev.schule.anticheat.data.PlayerData;
+import dev.schule.anticheat.replay.ReplayManager;
+import dev.schule.anticheat.replay.ReplayRecorder;
+import dev.schule.anticheat.replay.ReplayViewer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
@@ -33,6 +36,9 @@ public class AntiCheatPlugin extends JavaPlugin {
     private final Map<UUID, PlayerData> playerData = new HashMap<>();
     private ViolationManager violationManager;
     private KickLog kickLog;
+    private ReplayRecorder replayRecorder;
+    private ReplayManager replayManager;
+    private ReplayViewer replayViewer;
 
     /** Wird aufgerufen, wenn das Plugin geladen und aktiviert wird. */
     @Override
@@ -42,6 +48,9 @@ public class AntiCheatPlugin extends JavaPlugin {
 
         violationManager = new ViolationManager(this);
         kickLog = new KickLog(this);   // liest vorhandene kicks.log ein
+        replayRecorder = new ReplayRecorder(this);
+        replayManager = new ReplayManager(this);   // liest vorhandene Replays ein
+        replayViewer = new ReplayViewer(this);
 
         // Alle Checks registrieren
         checks.add(new FlyCheck(this));
@@ -53,6 +62,7 @@ public class AntiCheatPlugin extends JavaPlugin {
 
         // Ereignisse (Bewegung, Angriffe, ...) an unseren Listener weiterleiten
         getServer().getPluginManager().registerEvents(new EventListener(this), this);
+        getServer().getPluginManager().registerEvents(replayViewer, this);
 
         // Befehl /ac
         AcCommand command = new AcCommand(this);
@@ -68,6 +78,9 @@ public class AntiCheatPlugin extends JavaPlugin {
         // Alle 10 Ticks die zeitgesteuerten Prüfungen (z. B. Schweben) ausführen
         Bukkit.getScheduler().runTaskTimer(this, this::tickChecks, 10L, 10L);
 
+        // Jeden Tick die "Dashcam" für alle Spieler laufen lassen (für Replays)
+        Bukkit.getScheduler().runTaskTimer(this, replayRecorder::tick, 1L, 1L);
+
         // Falls das Plugin bei laufendem Server neu geladen wird: Daten für alle Online-Spieler anlegen
         for (Player player : Bukkit.getOnlinePlayers()) {
             getData(player);
@@ -80,6 +93,10 @@ public class AntiCheatPlugin extends JavaPlugin {
     /** Wird aufgerufen, wenn der Server stoppt oder das Plugin deaktiviert wird. */
     @Override
     public void onDisable() {
+        // Laufende Replays beenden (Puppen entfernen, Admins zurücksetzen)
+        if (replayViewer != null) {
+            replayViewer.stopAll();
+        }
         getLogger().info("SchoolAntiCheat gestoppt.");
     }
 
@@ -119,6 +136,18 @@ public class AntiCheatPlugin extends JavaPlugin {
             }
         }
         return null;
+    }
+
+    public ReplayRecorder getReplayRecorder() {
+        return replayRecorder;
+    }
+
+    public ReplayManager getReplayManager() {
+        return replayManager;
+    }
+
+    public ReplayViewer getReplayViewer() {
+        return replayViewer;
     }
 
     public KickLog getKickLog() {
